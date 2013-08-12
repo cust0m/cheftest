@@ -1,0 +1,13 @@
+site 'http://community.opscode.com/api/v1'
+
+cookbook 'apt'
+cookbook 'build-essential'
+cookbook 'runit'
+cookbook 'ohai'
+cookbook 'git'
+cookbook 'openssl'
+
+cookbook 'nginx'
+cookbook 'unicorn'
+cookbook 'mysql'
+cookbook 'rbenv'

@@ -1,0 +1,81 @@
+{
+  "name": "web",
+  "chef_type": "role",
+  "json_class": "Chef::Role",
+  "description": "HTTP Server",
+  "default_attributes": {
+    "user": {
+      "name": "vagrant"
+    },
+    "nginx": {
+      "default_site_enabled": false
+    },
+    "unicorn": {
+      "options": { "backlog": "64" },
+      "preload_app": true,
+      "worker_processes": "2",
+      "worker_timeout": "30"
+    }
+  },
+  "ruby-version": "1.9.3-p286",
+  "run_list": [
+    "recipe[runit]",
+    "recipe[apt]",
+    "recipe[build-essential]",
+    "recipe[ohai]",
+    "recipe[git]",
+    "recipe[openssl]",
+    "recipe[nginx::default]",
+    "recipe[unicorn]",
+    "recipe[rbenv]",
+    "recipe[main]"
+  ],
+  "authorization": {
+    "sudo": {
+      "groups":       ["vagrant"],
+      "users":        ["vagrant"],
+      "passwordless": true
+    }
+  },
+  "nginx": {
+    "user"          : "vagrant",
+    "distribution"  : "oneiric",
+    "components"    : ["main"],
+    "apps": {
+      "app1": {
+        "listen"     : [80],
+        "server_name": "app1.example.com",
+        "public_path": "/home/vagrant/public_html/app1/current/public",
+        "upstreams"  : [
+          {
+            "name"    : "app1",
+            "servers" : ["unix:/home/vagrant/public_html/app1/shared/pids/app1.sock max_fails=3 fail_timeout=1s"]
+          }
+        ],
+        "locations": [
+          {
+            "path": "/",
+            "directives": [
+              "proxy_set_header X-Forwarded-Proto $scheme;",
+              "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
+              "proxy_set_header X-Real-IP $remote_addr;",
+              "proxy_set_header Host $host;",
+              "proxy_redirect off;",
+              "proxy_http_version 1.1;",
+              "proxy_set_header Connection '';",
+              "proxy_pass http://app1;"
+            ]
+          },
+          {
+            "path": "~ ^/(assets)/",
+            "directives": [
+              "gzip_static on;",
+              "expires max;",
+              "add_header Cache-Control public;"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
